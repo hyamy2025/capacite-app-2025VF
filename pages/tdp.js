@@ -1,35 +1,45 @@
-import React, { useState } from "react";
+"use client";
+import React, { useEffect, useState } from "react";
 import TableauSalles from "@/components/TableauSalles";
 import TableauEffectif from "@/components/TableauEffectif";
 import TableauRepartition from "@/components/TableauRepartition";
 import TableauResultats from "@/components/TableauResultats";
-import { initialTheoriqueData, initialPratiqueData, initialEffectifData, initialRepartitionData } from "@/utils/initialState";
+import generatePDF from "@/utils/generatePDF";
+import { initialState } from "@/utils/initialState";
 import { calculerResultat } from "@/utils/calculs";
 
 export default function TDP() {
-  const [theoriques, setTheoriques] = useState(initialTheoriqueData);
-  const [pratiques, setPratiques] = useState(initialPratiqueData);
-  const [effectif, setEffectif] = useState(initialEffectifData);
-  const [repartition, setRepartition] = useState(initialRepartitionData);
+  const [data, setData] = useState(initialState("tdp"));
+  const [resultat, setResultat] = useState({});
 
-  const resultat = calculerResultat(theoriques, pratiques, repartition, effectif);
+  useEffect(() => {
+    const storedData = localStorage.getItem("tdpData");
+    if (storedData) {
+      setData(JSON.parse(storedData));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("tdpData", JSON.stringify(data));
+    const res = calculerResultat(data);
+    setResultat(res);
+  }, [data]);
 
   return (
     <div className="p-4 space-y-6">
-      <h1 className="text-2xl font-bold mb-4">Tableau des Données : TDP</h1>
-      <TableauSalles
-        type="théorique"
-        data={theoriques}
-        setData={setTheoriques}
-      />
-      <TableauSalles
-        type="pratique"
-        data={pratiques}
-        setData={setPratiques}
-      />
-      <TableauEffectif data={effectif} setData={setEffectif} />
-      <TableauRepartition data={repartition} setData={setRepartition} />
-      <TableauResultat resultat={resultat} />
+      <h1 className="text-2xl font-bold">Tableau de Dimensionnement - Pratique</h1>
+      <TableauSalles data={data} setData={setData} type="pratique" />
+      <TableauEffectif data={data} setData={setData} />
+      <TableauRepartition data={data} setData={setData} />
+      <TableauResultats resultat={resultat} />
+      <div className="flex justify-end">
+        <button
+          onClick={() => generatePDF("tdp", data, resultat)}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Télécharger PDF
+        </button>
+      </div>
     </div>
   );
 }
