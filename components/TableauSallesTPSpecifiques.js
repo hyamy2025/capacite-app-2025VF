@@ -6,8 +6,8 @@ import {
   sommeColonne
 } from "../utils/calculs";
 
-export default function TableauSalles({
-  titre = "Salles",
+export default function TableauSallesTPSpecifiques({
+  titre = "Salles TP Spécifiques",
   salles,
   setSalles,
   cno,
@@ -31,7 +31,6 @@ export default function TableauSalles({
         parseFloat(newSalles[index].cno)
       );
     }
-    // تحديث heuresMax
     newSalles[index].heuresMax = calculerHeuresMax(
       newSalles[index].semaines,
       newSalles[index].heures
@@ -104,7 +103,6 @@ export default function TableauSalles({
   const totalHeuresMax = sommeColonne(salles.map(s => Number(s.heuresMax) || 0));
   const moyenneSurfaceP = moyenneColonne(salles.map(s => Number(s.surfaceP) || 0));
 
-  // تحديث النتائج للأب عند أي تغيير
   useEffect(() => {
     if (onDataChange) {
       onDataChange({

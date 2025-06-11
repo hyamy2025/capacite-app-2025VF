@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
-import { calculerBesoinHoraireParSpecialite } from "../utils/calculs";
+import { calculerBesoinHoraireParSpecialiteAjout } from "../utils/calculsAjout";
 
-export default function TableauRepartition({ effectifData, specialties, onDataChange }) {
+export default function TableauRepartitionAjout({ effectifData, specialties, onDataChange }) {
   const findSpecialtyData = (specialite) => {
     return specialties.find(s => s["Spécialité"] === specialite) || {};
   };
@@ -10,9 +10,10 @@ export default function TableauRepartition({ effectifData, specialties, onDataCh
     ? effectifData.map(row => ({
         ...row,
         groupes: Number(row.groupes) || 0,
+        groupesAjout: Number(row.groupesAjout) || 0,
         apprenants: Number(row.apprenants) || 0
       }))
-    : [{ specialite: "", groupes: 0, apprenants: 0 }];
+    : [{ specialite: "", groupes: 0, groupesAjout: 0, apprenants: 0 }];
 
   const besoinTheoParGroupeArr = rows.map(row => {
     const spec = findSpecialtyData(row.specialite);
@@ -24,11 +25,19 @@ export default function TableauRepartition({ effectifData, specialties, onDataCh
   });
   const besoinTheoParSpecArr = rows.map(row => {
     const spec = findSpecialtyData(row.specialite);
-    return calculerBesoinHoraireParSpecialite(row.groupes || 0, spec["Besoin Théorique par Groupe"] || 0);
+    return calculerBesoinHoraireParSpecialiteAjout(
+      row.groupes || 0,
+      row.groupesAjout || 0,
+      spec["Besoin Théorique par Groupe"] || 0
+    );
   });
   const besoinPratParSpecArr = rows.map(row => {
     const spec = findSpecialtyData(row.specialite);
-    return calculerBesoinHoraireParSpecialite(row.groupes || 0, spec["Besoin Pratique par Groupe"] || 0);
+    return calculerBesoinHoraireParSpecialiteAjout(
+      row.groupes || 0,
+      row.groupesAjout || 0,
+      spec["Besoin Pratique par Groupe"] || 0
+    );
   });
 
   const avgBesoinTheoParGroupe = besoinTheoParGroupeArr.length
@@ -56,22 +65,30 @@ export default function TableauRepartition({ effectifData, specialties, onDataCh
 
   return (
     <div className="bg-white shadow rounded-2xl p-4 mb-8">
-      <h2 className="text-xl font-bold text-gray-700 mb-4">Répartition</h2>
+      <h2 className="text-xl font-bold text-gray-700 mb-4">Répartition Prévue</h2>
       <table className="w-full table-auto border text-sm mb-4">
         <thead className="bg-gray-200">
           <tr>
             <th className="border p-2">Spécialité</th>
             <th className="border p-2">Besoin Théorique<br />par Groupe</th>
             <th className="border p-2">Besoin Pratique<br />par Groupe</th>
-            <th className="border p-2">Besoin Théorique<br />par Spécialité</th>
-            <th className="border p-2">Besoin Pratique<br />par Spécialité</th>
+            <th className="border p-2">Besoin Théorique<br />par Spécialité<br />(Existant+Ajout)</th>
+            <th className="border p-2">Besoin Pratique<br />par Spécialité<br />(Existant+Ajout)</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row, idx) => {
             const spec = findSpecialtyData(row.specialite);
-            const besoinTheoParSpecialite = calculerBesoinHoraireParSpecialite(row.groupes || 0, spec["Besoin Théorique par Groupe"] || 0);
-            const besoinPratParSpecialite = calculerBesoinHoraireParSpecialite(row.groupes || 0, spec["Besoin Pratique par Groupe"] || 0);
+            const besoinTheoParSpecialite = calculerBesoinHoraireParSpecialiteAjout(
+              row.groupes || 0,
+              row.groupesAjout || 0,
+              spec["Besoin Théorique par Groupe"] || 0
+            );
+            const besoinPratParSpecialite = calculerBesoinHoraireParSpecialiteAjout(
+              row.groupes || 0,
+              row.groupesAjout || 0,
+              spec["Besoin Pratique par Groupe"] || 0
+            );
 
             return (
               <tr key={idx}>

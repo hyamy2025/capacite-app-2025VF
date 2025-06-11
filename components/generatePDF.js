@@ -1,43 +1,36 @@
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
-export function generatePDF(titre, theoriques, pratiques, effectif, repartition, resultat) {
-  const doc = new jsPDF();
+export async function generatePDF({ titre, ref }) {
+  const element = ref.current;
+  if (!element) return;
 
-  doc.setFontSize(16);
-  doc.text(`Rapport ${titre}`, 14, 20);
+  try {
+    const canvas = await html2canvas(element, { scale: 2 });
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
 
-  doc.setFontSize(12);
-  doc.text(`Effectif total : ${effectif.total}`, 14, 30);
+    const nomStructure = localStorage.getItem('nomStructure') || 'Structure inconnue';
+    const numEnregistrement = localStorage.getItem('numEnregistrement') || '---';
 
-  autoTable(doc, {
-    startY: 40,
-    head: [["Nom", "Surface", "CNO", "Heures/Jour", "Semaines"]],
-    body: theoriques.map(s => [s.nom, s.surfacePedagogique, s.cno, s.heuresJour, s.semaines]),
-    theme: "grid",
-    headStyles: { fillColor: [220, 220, 220] },
-    margin: { top: 10 },
-  });
+    pdf.setFontSize(16);
+    pdf.text(titre, pageWidth / 2, 20, { align: 'center' });
 
-  autoTable(doc, {
-    startY: doc.lastAutoTable.finalY + 10,
-    head: [["Nom", "Surface", "CNO", "Heures/Jour", "Semaines"]],
-    body: pratiques.map(s => [s.nom, s.surfacePedagogique, s.cno, s.heuresJour, s.semaines]),
-    theme: "grid",
-    headStyles: { fillColor: [200, 200, 255] },
-    margin: { top: 10 },
-  });
+    pdf.setFontSize(12);
+    pdf.text(`Nom de la structure : ${nomStructure}`, 20, 30);
+    pdf.text(`N° d'enregistrement : ${numEnregistrement}`, 20, 37);
 
-  autoTable(doc, {
-    startY: doc.lastAutoTable.finalY + 10,
-    head: [["Type", "Capacité Globale", "Besoins", "Écart"]],
-    body: [
-      ["Théorique", resultat.capaciteTheorique, resultat.besoinsTheoriques, resultat.ecartTheorique],
-      ["Pratique", resultat.capacitePratique, resultat.besoinsPratiques, resultat.ecartPratique],
-    ],
-    theme: "striped",
-    margin: { top: 10 },
-  });
+    const imgProps = pdf.getImageProperties(imgData);
+    const pdfWidth = pageWidth - 20;
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-  doc.save(`${titre.replace(/\s+/g, "_")}.pdf`);
+    pdf.addImage(imgData, 'PNG', 10, 45, pdfWidth, pdfHeight);
+    pdf.save(`${titre.replace(/\s+/g, '_')}.pdf`);
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Erreur PDF:', error);
+    }
+  }
 }
+
